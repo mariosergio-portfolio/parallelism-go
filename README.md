@@ -51,6 +51,11 @@ Every request captures timing and goroutine identity so stress tests produce rea
 
 ---
 
+## REST API endpoints
+![img.png](docs/swagger-api-img.png)
+
+---
+
 ## Modules
 
 ### `/api/counter` — Parallel Counter
