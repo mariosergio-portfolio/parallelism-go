@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/mycompany/portfolio-go/docs"
 	counterhandler "github.com/mycompany/portfolio-go/internal/counter/handler"
 	primehandler "github.com/mycompany/portfolio-go/internal/prime/handler"
 
@@ -23,6 +24,8 @@ func Setup(counterHandler *counterhandler.CounterHandler, primeHandler *primehan
 		api.GET("/counter", counterHandler.Count)
 		api.GET("/prime", primeHandler.FindPrimes)
 	}
+
+	r.GET("/swagger-ui/index.html", docs.SwaggerUIHandler)
 
 	return r
 }

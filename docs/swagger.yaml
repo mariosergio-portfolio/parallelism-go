@@ -1,0 +1,255 @@
+openapi: "3.0.3"
+info:
+  title: Portfolio Go API
+  description: |
+    Demonstrates Go concurrency primitives via two endpoints:
+    - **Counter** – counts N numbers using configurable goroutines with an artificial delay.
+    - **Primes** – finds prime numbers up to a max value across N goroutines.
+  version: "1.0.0"
+
+servers:
+  - url: /api
+    description: Default server
+
+paths:
+  /counter:
+    get:
+      summary: Count numbers concurrently
+      description: |
+        Counts from 1 to **n** using **parallelProcess** goroutines, each sleeping **countDelay** ms before
+        incrementing. Returns at most 101 counter entries (first 100 + last).
+      operationId: getCounter
+      parameters:
+        - name: n
+          in: query
+          required: true
+          description: Total numbers to count (min 1)
+          schema:
+            type: integer
+            minimum: 1
+            example: 10
+        - name: countDelay
+          in: query
+          required: true
+          description: Delay in milliseconds per count step (min 1)
+          schema:
+            type: integer
+            minimum: 1
+            example: 100
+        - name: parallelProcess
+          in: query
+          required: true
+          description: Number of goroutines (-1 = one goroutine per n, min -1)
+          schema:
+            type: integer
+            minimum: -1
+            example: 2
+      responses:
+        "200":
+          description: Counting result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CounterResponse"
+              example:
+                summary:
+                  request:
+                    n: 10
+                    countDelay: 100
+                    parallelProcess: "2"
+                  response:
+                    startTime: "12:00:00.000Z"
+                    endTime: "12:00:00.510Z"
+                    durationMs: 510
+                    durationFormatted: "00:00:00:510"
+                counters:
+                  - number: 1
+                    completedTime: "12:00:00.105Z"
+                    completedTimeMs: 1700000000105
+                    processId: "goroutine-1"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /prime:
+    get:
+      summary: Find prime numbers concurrently
+      description: |
+        Generates **n** random numbers in the range [2, **nMaxValue**] and checks each for primality
+        using **parallelProcess** goroutines. Returns at most 101 prime results (first 100 + last).
+      operationId: getPrimes
+      parameters:
+        - name: n
+          in: query
+          required: true
+          description: How many numbers to test (min 1)
+          schema:
+            type: integer
+            minimum: 1
+            example: 20
+        - name: nMaxValue
+          in: query
+          required: true
+          description: Upper bound for random number generation (min 2)
+          schema:
+            type: integer
+            minimum: 2
+            example: 1000
+        - name: parallelProcess
+          in: query
+          required: true
+          description: Number of goroutines (min 1)
+          schema:
+            type: integer
+            minimum: 1
+            example: 4
+      responses:
+        "200":
+          description: Prime search result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrimeResponse"
+              example:
+                summary:
+                  request:
+                    n: 20
+                    nMaxValue: 1000
+                    parallelProcess: 4
+                  response:
+                    startTime: "12:00:00.000Z"
+                    endTime: "12:00:00.012Z"
+                    durationMs: 12
+                    durationFormatted: "00:00:00:012"
+                    totalFound: 6
+                primes:
+                  - index: 1
+                    value: 97
+                    processId: "goroutine-2"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    # ── Counter ──────────────────────────────────────────────────────────────
+    CounterResponse:
+      type: object
+      properties:
+        summary:
+          $ref: "#/components/schemas/CounterSummary"
+        counters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Counter"
+
+    CounterSummary:
+      type: object
+      properties:
+        request:
+          $ref: "#/components/schemas/CounterSummaryRequest"
+        response:
+          $ref: "#/components/schemas/CounterSummaryResponse"
+
+    CounterSummaryRequest:
+      type: object
+      properties:
+        n:
+          type: integer
+        countDelay:
+          type: integer
+        parallelProcess:
+          type: string
+
+    CounterSummaryResponse:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        durationMs:
+          type: integer
+          format: int64
+        durationFormatted:
+          type: string
+
+    Counter:
+      type: object
+      properties:
+        number:
+          type: integer
+        completedTime:
+          type: string
+        completedTimeMs:
+          type: integer
+          format: int64
+        processId:
+          type: string
+
+    # ── Prime ─────────────────────────────────────────────────────────────────
+    PrimeResponse:
+      type: object
+      properties:
+        summary:
+          $ref: "#/components/schemas/PrimeSummary"
+        primes:
+          type: array
+          items:
+            $ref: "#/components/schemas/PrimeResult"
+
+    PrimeSummary:
+      type: object
+      properties:
+        request:
+          $ref: "#/components/schemas/PrimeSummaryRequest"
+        response:
+          $ref: "#/components/schemas/PrimeSummaryResponse"
+
+    PrimeSummaryRequest:
+      type: object
+      properties:
+        n:
+          type: integer
+        nMaxValue:
+          type: integer
+        parallelProcess:
+          type: integer
+
+    PrimeSummaryResponse:
+      type: object
+      properties:
+        startTime:
+          type: string
+        endTime:
+          type: string
+        durationMs:
+          type: integer
+          format: int64
+        durationFormatted:
+          type: string
+        totalFound:
+          type: integer
+
+    PrimeResult:
+      type: object
+      properties:
+        index:
+          type: integer
+        value:
+          type: integer
+        processId:
+          type: string
+
+    # ── Shared ────────────────────────────────────────────────────────────────
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
