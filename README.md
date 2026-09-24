@@ -1,4 +1,4 @@
-# Portfolio — Go Concurrency Exploration
+# Go Concurrency Exploration
 
 A Gin REST API built with **Go 1.26** that explores Go's native concurrency model: sequential execution, bounded goroutine pools, and unrestricted
 goroutine-per-task dispatch — the Go equivalent of Java virtual threads.
